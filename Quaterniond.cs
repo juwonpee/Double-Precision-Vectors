@@ -7,15 +7,34 @@ namespace UnityEngine {
     [Serializable] public struct Quaterniond
     {
         public double w,x,y,z;
+        public Quaterniond(Quaternion q) {
+            this.x = q.x;
+            this.y = q.y;
+            this.z = q.z;
+            this.w = q.w;
+        }
 
         public Quaterniond(Vector4d v4) {
-            this.w = v4.w;
             this.x = v4.x;
             this.y = v4.y;
             this.z = v4.z;
+            this.w = v4.w;
+        }
+        public Quaterniond(Vector4 v4) {
+            this.x = v4.x;
+            this.y = v4.y;
+            this.z = v4.z;
+            this.w = v4.w;
         }
 
         public Quaterniond(double x, double y, double z, double w) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.w = w;
+        }
+
+        public Quaterniond(float x, float y, float z, float w) {
             this.x = x;
             this.y = y;
             this.z = z;
