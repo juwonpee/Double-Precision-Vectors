@@ -12,18 +12,13 @@ namespace UnityEngine {
 
         public double this[int index] {
             get {
-                switch (index) {
-                    case 0:
-                        return this.w;
-                    case 1:
-                        return this.x;
-                    case 2:
-                        return this.y;
-                    case 3:
-                        return this.z;
-                    default:
-                        throw new IndexOutOfRangeException("Invalid Vector4d index!");
-                }
+                return index switch {
+                    0 => x,
+                    1 => y,
+                    2 => z,
+                    3 => w,
+                    _ => throw new IndexOutOfRangeException("Invalid Vector4d index!"),
+                };
             }
             set {
                 switch (index) {

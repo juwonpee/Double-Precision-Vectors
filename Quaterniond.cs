@@ -1,10 +1,17 @@
 using System;
+using System.Globalization;
+using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Bindings;
+using UnityEngine.Internal;
+using UnityEngine.Scripting;
+using Unity.IL2CPP.CompilerServices;
 
 namespace UnityEngine {
 
-    [Serializable] public struct Quaterniond
+    [Serializable] 
+    public struct Quaterniond
     {
         public double w,x,y,z;
         public Quaterniond(Quaternion q) {
@@ -46,10 +53,10 @@ namespace UnityEngine {
         public double this[int index] {
             get {
                 return index switch {
-                    0 => w,
-                    1 => x,
-                    2 => y,
-                    3 => z,
+                    0 => x,
+                    1 => y,
+                    2 => z,
+                    3 => w,
                     _ => throw new IndexOutOfRangeException("Invalid Quaterniond index!"),
                 };
                 
@@ -57,16 +64,16 @@ namespace UnityEngine {
             set {
                 switch (index) {
                     case 0:
-                        this.w = value;
-                        break;
-                    case 1:
                         this.x = value;
                         break;
-                    case 2:
+                    case 1:
                         this.y = value;
                         break;
-                    case 3:
+                    case 2:
                         this.z = value;
+                        break;
+                    case 3:
+                        this.w = value;
                         break;
                     default:
                         throw new IndexOutOfRangeException("Invalid Quaterniond index!");
@@ -84,6 +91,92 @@ namespace UnityEngine {
                     this.w / magnitude
                 );
             }
+        }
+
+        public static explicit operator Quaternion(Quaterniond q) {
+            return new Quaternion((float)q.x, (float)q.y, (float)q.z, (float)q.w);
+        }
+
+
+        // TODO: IMPLEMENT THIS
+        public static double Angle(Quaterniond a, Quaterniond b) {
+            return 0;
+        }
+
+        public static Quaterniond AngleAxis(double angle, Vector3d axis) {
+            // Convert angle to radians
+            double rad = angle * Mathf.Deg2Rad;
+            axis.Normalize();
+
+            double halfAngle = rad * 0.5d;
+            double s = Mathd.Sin(halfAngle);
+
+            return new Quaterniond(
+                axis.x * s,
+                axis.y * s,
+                axis.z * s,
+                Mathd.Cos(halfAngle)
+            );
+        }
+
+        // TODO: IMPLEMENT THIS
+        public static double Dot(Quaterniond a, Quaterniond b) {
+            return 0;
+        }
+
+        // TODO: IMPLEMENT THIS
+        public static Quaterniond Euler(double x, double y, double z) {
+            return Quaterniond.identity;
+        }
+        
+        // TODO: IMPLEMENT THIS
+        public static Quaterniond Euler(Vector3d euler) {
+            return Quaterniond.identity;
+        }
+
+        // TODO: IMPLEMENT THIS
+        public static Quaterniond FromToRotation(Vector3d fromDirection, Vector3d toDirection) {
+            return Quaterniond.identity;
+        }
+
+        // TODO: IMPLEMENT THIS
+        public static Quaterniond Inverse(Quaterniond rotation) {
+            return Quaterniond.identity;
+        }
+
+        // TODO: IMPLEMENT THIS
+        public static Quaterniond Lerp(Quaterniond a, Quaterniond b, double t) {
+            return Quaterniond.identity;
+        }
+
+        // TODO: IMPLEMENT THIS
+        public static Quaterniond LerpUnclamped(Quaterniond a, Quaterniond b, double t) {
+            return Quaterniond.identity;
+        }
+
+        // TODO: IMPLEMENT THIS
+        public static Quaterniond LookRotation(Vector3d forwards, [DefaultValue("Vector3d.up")]Vector3d upwards) {
+            return Quaterniond.identity;
+        }
+
+        // TODO: IMPLEMENT THIS
+        public static Quaterniond Normalize(Quaterniond q) {
+            return Quaterniond.identity;
+        }
+
+        // TODO: IMPLEMENT THIS
+        public static Quaterniond RotateTowards(Quaterniond from, Quaterniond to, double maxDegreesDelta) {
+            return Quaterniond.identity;
+        }
+
+        // TODO: IMPLEMENT THIS
+        public static Quaterniond Slerp(Quaterniond a, Quaterniond b, double t) {
+            return Quaterniond.identity;
+        }
+
+        // TODO: IMPLEMENT THIS
+        public static Quaterniond SLerpUnclamped(Quaterniond a, Quaterniond b, double t) {
+            return Quaterniond.identity;
         }
     }
 }
