@@ -1,386 +1,479 @@
-// Type: UnityEngine.Vector3d
-// Assembly: UnityEngine, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-// Assembly location: C:\Program Files (x86)\Unity\Editor\Data\Managed\UnityEngine.dll
 using System;
 using System.Runtime.CompilerServices;
+using System.Globalization;
 using UnityEngine;
 
-namespace UnityEngine {
-    [Serializable] public struct Vector3d { 
-        public const float kEpsilon = 1E-05f;
-        public double x;
-        public double y;
-        public double z;
+namespace DoublePrecision {
 
-        public double this[int index] {
-            get {
-                switch (index) {
-                    case 0:
-                        return this.x;
-                    case 1:
-                        return this.y;
-                    case 2:
-                        return this.z;
-                    default:
-                        throw new IndexOutOfRangeException("Invalid Vector3d index!");
-                }
-            }
-            set {
-                switch (index) {
-                    case 0:
-                        this.x = value;
-                        break;
-                    case 1:
-                        this.y = value;
-                        break;
-                    case 2:
-                        this.z = value;
-                        break;
-                    default:
-                        throw new IndexOutOfRangeException("Invalid Vector3d index!");
-                }
-            }
+	[Serializable] public struct Vector3d {
+		
+        // *Undocumented*
+        public const double kEpsilon = 4.94065645841247E-324;
+        // *Undocumented*
+        public const double kEpsilonNormalSqrt = 1e-15F;
+		public double x,y,z;
+
+		#region Constructors
+		public Vector3d (double x) { this.x = x; this.y = this.z = 0; }
+		public Vector3d (double x, double y) { this.x = x; this.y = y; this.z = 0; }
+		public Vector3d (double x, double y, double z) { this.x = x; this.y = y; this.z = z; }
+		public Vector3d (Vector3 a) { x = a.x; y = a.y; z = a.z;  }
+
+		#endregion
+
+		#region Methods
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Set(double newX, double newY, double newZ) { x = newX; y = newY; z = newZ; }
+		
+
+        // Multiplies every component of this vector by the same component of /scale/.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Scale(Vector3d scale) { x *= scale.x; y *= scale.y; z *= scale.z; }
+
+		
+		// used to allow Vector3s to be used as keys in hash tables
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override int GetHashCode() { return x.GetHashCode() ^ (y.GetHashCode() << 2) ^ (z.GetHashCode() >> 2); }
+
+		// also required for being able to use Vector3s as keys in hash tables
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override bool Equals(object other)
+        {
+            if (other is Vector3d v)
+                return Equals(v);
+            return false;
         }
 
-        public Vector3d normalized {
-            get {
-                return Vector3d.Normalize(this);
-            }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Equals(Vector3d other)
+        {
+            return x == other.x && y == other.y && z == other.z;
         }
 
-        public double magnitude {
-            get {
-                return Math.Sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
-            }
+		#endregion
+
+		#region Static Functions
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Vector3d Lerp(Vector3d a, Vector3d b, double t) {
+			t = Math.Clamp(t, 0, 1);
+			
+            return new Vector3d(
+                a.x + (b.x - a.x) * t,
+                a.y + (b.y - a.y) * t,
+                a.z + (b.z - a.z) * t
+            );
+		}
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Vector3d LerpUnclamped(Vector3d a, Vector3d b, double t)
+        {
+            return new Vector3d(
+                a.x + (b.x - a.x) * t,
+                a.y + (b.y - a.y) * t,
+                a.z + (b.z - a.z) * t
+            );
         }
 
-        public double sqrMagnitude {
-            get {
-                return this.x * this.x + this.y * this.y + this.z * this.z;
-            }
-        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Vector3d MoveTowards(Vector3d current, Vector3d target, double maxDistanceDelta)
+        {
+            // avoid vector ops because current scripting backends are terrible at inlining
+            double toVector_x = target.x - current.x;
+            double toVector_y = target.y - current.y;
+            double toVector_z = target.z - current.z;
 
-        public static Vector3d zero {
-            get {
-                return new Vector3d(0d, 0d, 0d);
-            }
-        }
+            double sqdist = toVector_x * toVector_x + toVector_y * toVector_y + toVector_z * toVector_z;
 
-        public static Vector3d one {
-            get {
-                return new Vector3d(1d, 1d, 1d);
-            }
-        }
-
-        public static Vector3d forward {
-            get {
-                return new Vector3d(0d, 0d, 1d);
-            }
-        }
-
-        public static Vector3d back {
-            get {
-                return new Vector3d(0d, 0d, -1d);
-            }
-        }
-
-        public static Vector3d up {
-            get {
-                return new Vector3d(0d, 1d, 0d);
-            }
-        }
-
-        public static Vector3d down {
-            get {
-                return new Vector3d(0d, -1d, 0d);
-            }
-        }
-
-        public static Vector3d left {
-            get {
-                return new Vector3d(-1d, 0d, 0d);
-            }
-        }
-
-        public static Vector3d right {
-            get {
-                return new Vector3d(1d, 0d, 0d);
-            }
-        }
-
-        [Obsolete("Use Vector3d.forward instead.")]
-        public static Vector3d fwd {
-            get {
-                return new Vector3d(0d, 0d, 1d);
-            }
-        }
-
-        public Vector3d(double x, double y, double z) {
-            this.x = x;
-            this.y = y;
-            this.z = z;
-        }
-
-        public Vector3d(float x, float y, float z) {
-            this.x = (double)x;
-            this.y = (double)y;
-            this.z = (double)z;
-        }
-
-        public Vector3d(Vector3 v3) {
-            this.x = (double)v3.x;
-            this.y = (double)v3.y;
-            this.z = (double)v3.z;
-        }
-
-        public Vector3d(double x, double y) {
-            this.x = x;
-            this.y = y;
-            this.z = 0d;
-        }
-
-        public static Vector3d operator +(Vector3d a, Vector3d b) {
-            return new Vector3d(a.x + b.x, a.y + b.y, a.z + b.z);
-        }
-
-        public static Vector3d operator -(Vector3d a, Vector3d b) {
-            return new Vector3d(a.x - b.x, a.y - b.y, a.z - b.z);
-        }
-
-        public static Vector3d operator -(Vector3d a) {
-            return new Vector3d(-a.x, -a.y, -a.z);
-        }
-
-        public static Vector3d operator *(Vector3d a, double d) {
-            return new Vector3d(a.x * d, a.y * d, a.z * d);
-        }
-
-        public static Vector3d operator *(double d, Vector3d a) {
-            return new Vector3d(a.x * d, a.y * d, a.z * d);
-        }
-
-        public static Vector3d operator *(Quaterniond quaternion, Vector3d vector) {
-            double qx = quaternion.x;
-            double qy = quaternion.y;
-            double qz = quaternion.z;
-            double qw = quaternion.w;
-
-            // Convert vector to quaternion (w = 0)
-            double vx = vector.x;
-            double vy = vector.y;
-            double vz = vector.z;
-
-            // Perform the rotation
-            // Formula: v_rotated = q * v * q^-1
-            // Step 1: Calculate intermediate cross products
-            Vector3d qVector = new Vector3d(qx, qy, qz);
-            Vector3d uv = Vector3d.Cross(qVector, vector);
-            Vector3d uuv = Vector3d.Cross(qVector, uv);
-
-            // Step 2: Add contributions from quaternion scalar part (w)
-            Vector3d rotatedVector = vector + 2.0f * (qw * uv + uuv);
-
-            return rotatedVector;
-        }
-
-        public static Vector3d operator /(Vector3d a, double d) {
-            return new Vector3d(a.x / d, a.y / d, a.z / d);
-        }
-
-        public static bool operator ==(Vector3d lhs, Vector3d rhs) {
-            return (double)Vector3d.SqrMagnitude(lhs - rhs) < 0.0 / 1.0;
-        }
-
-        public static bool operator !=(Vector3d lhs, Vector3d rhs) {
-            return (double)Vector3d.SqrMagnitude(lhs - rhs) >= 0.0 / 1.0;
-        }
-
-        public static explicit operator Vector3(Vector3d vector3d) {
-            return new Vector3((float)vector3d.x, (float)vector3d.y, (float)vector3d.z);
-        }
-
-        public static Vector3d Lerp(Vector3d from, Vector3d to, double t) {
-            t = Mathd.Clamp01(t);
-            return new Vector3d(from.x + (to.x - from.x) * t, from.y + (to.y - from.y) * t, from.z + (to.z - from.z) * t);
-        }
-
-        public static Vector3d Slerp(Vector3d from, Vector3d to, double t) {
-            Vector3 v3 = Vector3.Slerp((Vector3)from, (Vector3)to, (float)t);
-            return new Vector3d(v3);
-        }
-
-        public static void OrthoNormalize(ref Vector3d normal, ref Vector3d tangent) {
-            Vector3 v3normal = new Vector3();
-            Vector3 v3tangent = new Vector3();
-            v3normal = (Vector3)normal;
-            v3tangent = (Vector3)tangent;
-            Vector3.OrthoNormalize(ref v3normal, ref v3tangent);
-            normal = new Vector3d(v3normal);
-            tangent = new Vector3d(v3tangent);
-        }
-
-        public static void OrthoNormalize(ref Vector3d normal, ref Vector3d tangent, ref Vector3d binormal) {
-            Vector3 v3normal = new Vector3();
-            Vector3 v3tangent = new Vector3();
-            Vector3 v3binormal = new Vector3();
-            v3normal = (Vector3)normal;
-            v3tangent = (Vector3)tangent;
-            v3binormal = (Vector3)binormal;
-            Vector3.OrthoNormalize(ref v3normal, ref v3tangent, ref v3binormal);
-            normal = new Vector3d(v3normal);
-            tangent = new Vector3d(v3tangent);
-            binormal = new Vector3d(v3binormal);
-        }
-
-        public static Vector3d MoveTowards(Vector3d current, Vector3d target, double maxDistanceDelta) {
-            Vector3d vector3 = target - current;
-            double magnitude = vector3.magnitude;
-            if (magnitude <= maxDistanceDelta || magnitude == 0.0d)
+            if (sqdist == 0 || (maxDistanceDelta >= 0 && sqdist <= maxDistanceDelta * maxDistanceDelta))
                 return target;
-            else
-                return current + vector3 / magnitude * maxDistanceDelta;
+            var dist = Math.Sqrt(sqdist);
+
+            return new Vector3d(current.x + toVector_x / dist * maxDistanceDelta,
+                current.y + toVector_y / dist * maxDistanceDelta,
+                current.z + toVector_z / dist * maxDistanceDelta);
         }
 
-        public static Vector3d RotateTowards(Vector3d current, Vector3d target, double maxRadiansDelta, double maxMagnitudeDelta) {
-            Vector3 v3 = Vector3.RotateTowards((Vector3)current, (Vector3)target, (float)maxRadiansDelta, (float)maxMagnitudeDelta);
-            return new Vector3d(v3);
-        }
+		 // Gradually changes a vector towards a desired goal over time.
+        public static Vector3d SmoothDamp(Vector3d current, Vector3d target, ref Vector3d currentVelocity, double smoothTime, double maxSpeed, double deltaTime)
+        {
+            double output_x = 0f;
+            double output_y = 0f;
+            double output_z = 0f;
 
-        public static Vector3d SmoothDamp(Vector3d current, Vector3d target, ref Vector3d currentVelocity, double smoothTime, double maxSpeed) {
-            double deltaTime = (double)Time.deltaTime;
-            return Vector3d.SmoothDamp(current, target, ref currentVelocity, smoothTime, maxSpeed, deltaTime);
-        }
+            // Based on Game Programming Gems 4 Chapter 1.10
+            smoothTime = Math.Max(0.0001F, smoothTime);
+            double omega = 2F / smoothTime;
 
-        public static Vector3d SmoothDamp(Vector3d current, Vector3d target, ref Vector3d currentVelocity, double smoothTime) {
-            double deltaTime = (double)Time.deltaTime;
-            double maxSpeed = double.PositiveInfinity;
-            return Vector3d.SmoothDamp(current, target, ref currentVelocity, smoothTime, maxSpeed, deltaTime);
-        }
+            double x = omega * deltaTime;
+            double exp = 1F / (1F + x + 0.48F * x * x + 0.235F * x * x * x);
 
-        public static Vector3d SmoothDamp(Vector3d current, Vector3d target, ref Vector3d currentVelocity, double smoothTime, double maxSpeed, double deltaTime) {
-            smoothTime = Mathd.Max(0.0001d, smoothTime);
-            double num1 = 2d / smoothTime;
-            double num2 = num1 * deltaTime;
-            double num3 = (1.0d / (1.0d + num2 + 0.479999989271164d * num2 * num2 + 0.234999999403954d * num2 * num2 * num2));
-            Vector3d vector = current - target;
-            Vector3d vector3_1 = target;
-            double maxLength = maxSpeed * smoothTime;
-            Vector3d vector3_2 = Vector3d.ClampMagnitude(vector, maxLength);
-            target = current - vector3_2;
-            Vector3d vector3_3 = (currentVelocity + num1 * vector3_2) * deltaTime;
-            currentVelocity = (currentVelocity - num1 * vector3_3) * num3;
-            Vector3d vector3_4 = target + (vector3_2 + vector3_3) * num3;
-            if (Vector3d.Dot(vector3_1 - current, vector3_4 - vector3_1) > 0.0) {
-                vector3_4 = vector3_1;
-                currentVelocity = (vector3_4 - vector3_1) / deltaTime;
+            double change_x = current.x - target.x;
+            double change_y = current.y - target.y;
+            double change_z = current.z - target.z;
+            Vector3d originalTo = target;
+
+            // Clamp maximum speed
+            double maxChange = maxSpeed * smoothTime;
+
+            double maxChangeSq = maxChange * maxChange;
+            double sqrmag = change_x * change_x + change_y * change_y + change_z * change_z;
+            if (sqrmag > maxChangeSq)
+            {
+                var mag = Math.Sqrt(sqrmag);
+                change_x = change_x / mag * maxChange;
+                change_y = change_y / mag * maxChange;
+                change_z = change_z / mag * maxChange;
             }
-            return vector3_4;
+
+            target.x = current.x - change_x;
+            target.y = current.y - change_y;
+            target.z = current.z - change_z;
+
+            double temp_x = (currentVelocity.x + omega * change_x) * deltaTime;
+            double temp_y = (currentVelocity.y + omega * change_y) * deltaTime;
+            double temp_z = (currentVelocity.z + omega * change_z) * deltaTime;
+
+            currentVelocity.x = (currentVelocity.x - omega * temp_x) * exp;
+            currentVelocity.y = (currentVelocity.y - omega * temp_y) * exp;
+            currentVelocity.z = (currentVelocity.z - omega * temp_z) * exp;
+
+            output_x = target.x + (change_x + temp_x) * exp;
+            output_y = target.y + (change_y + temp_y) * exp;
+            output_z = target.z + (change_z + temp_z) * exp;
+
+            // Prevent overshooting
+            double origMinusCurrent_x = originalTo.x - current.x;
+            double origMinusCurrent_y = originalTo.y - current.y;
+            double origMinusCurrent_z = originalTo.z - current.z;
+            double outMinusOrig_x = output_x - originalTo.x;
+            double outMinusOrig_y = output_y - originalTo.y;
+            double outMinusOrig_z = output_z - originalTo.z;
+
+            if (origMinusCurrent_x * outMinusOrig_x + origMinusCurrent_y * outMinusOrig_y + origMinusCurrent_z * outMinusOrig_z > 0)
+            {
+                output_x = originalTo.x;
+                output_y = originalTo.y;
+                output_z = originalTo.z;
+
+                currentVelocity.x = (output_x - originalTo.x) / deltaTime;
+                currentVelocity.y = (output_y - originalTo.y) / deltaTime;
+                currentVelocity.z = (output_z - originalTo.z) / deltaTime;
+            }
+
+            return new Vector3d(output_x, output_y, output_z);
         }
 
-        public void Set(double new_x, double new_y, double new_z) {
-            this.x = new_x;
-            this.y = new_y;
-            this.z = new_z;
+		
+		public double this[int index]
+        {
+            get
+            {
+                switch (index)
+                {
+                    case 0: return x;
+                    case 1: return y;
+                    case 2: return z;
+                    default:
+                        throw new IndexOutOfRangeException("Invalid Vector3d index!");
+                }
+            }
+
+            set
+            {
+                switch (index)
+                {
+                    case 0: x = value; break;
+                    case 1: y = value; break;
+                    case 2: z = value; break;
+                    default:
+                        throw new IndexOutOfRangeException("Invalid Vector3d index!");
+                }
+            }
         }
 
-        public static Vector3d Scale(Vector3d a, Vector3d b) {
-            return new Vector3d(a.x * b.x, a.y * b.y, a.z * b.z);
+
+
+        // Multiplies two vectors component-wise.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3d Scale(Vector3d a, Vector3d b) { return new Vector3d(a.x * b.x, a.y * b.y, a.z * b.z); }
+		
+        // Cross Product of two vectors.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3d Cross(Vector3d lhs, Vector3d rhs)
+        {
+            return new Vector3d(
+                lhs.y * rhs.z - lhs.z * rhs.y,
+                lhs.z * rhs.x - lhs.x * rhs.z,
+                lhs.x * rhs.y - lhs.y * rhs.x);
         }
 
-        public void Scale(Vector3d scale) {
-            this.x *= scale.x;
-            this.y *= scale.y;
-            this.z *= scale.z;
+        // Reflects a vector off the plane defined by a normal.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3d Reflect(Vector3d inDirection, Vector3d inNormal)
+        {
+            double factor = -2F * Dot(inNormal, inDirection);
+            return new Vector3d(factor * inNormal.x + inDirection.x,
+                factor * inNormal.y + inDirection.y,
+                factor * inNormal.z + inDirection.z);
         }
 
-        public static Vector3d Cross(Vector3d lhs, Vector3d rhs) {
-            return new Vector3d(lhs.y * rhs.z - lhs.z * rhs.y, lhs.z * rhs.x - lhs.x * rhs.z, lhs.x * rhs.y - lhs.y * rhs.x);
-        }
-
-        public override bool Equals(object other) {
-            if (!(other is Vector3d))
-                return false;
-            Vector3d vector3d = (Vector3d)other;
-            if (this.x.Equals(vector3d.x) && this.y.Equals(vector3d.y))
-                return this.z.Equals(vector3d.z);
+        // *undoc* --- we have normalized property now
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3d Normalize(Vector3d value)
+        {
+            double mag = Magnitude(value);
+            if (mag > kEpsilon)
+                return value / mag;
             else
-                return false;
+                return zero;
         }
 
-        public static Vector3d Reflect(Vector3d inDirection, Vector3d inNormal) {
-            return -2d * Vector3d.Dot(inNormal, inDirection) * inNormal + inDirection;
-        }
-
-        public static Vector3d Normalize(Vector3d value) {
-            double num = Vector3d.Magnitude(value);
-            if (num > 9.99999974737875E-06)
-                return value / num;
+        // Makes this vector have a ::ref::magnitude of 1.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Normalize()
+        {
+            double mag = Magnitude(this);
+            if (mag > kEpsilon)
+                this = this / mag;
             else
-                return Vector3d.zero;
+                this = zero;
         }
 
-        public void Normalize() {
-            double num = Vector3d.Magnitude(this);
-            if (num > 9.99999974737875E-06)
-                this = this / num;
+        // Returns this vector with a ::ref::magnitude of 1 (RO).
+        public Vector3d normalized
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get { return Vector3d.Normalize(this); }
+        }
+
+        // Dot Product of two vectors.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double Dot(Vector3d lhs, Vector3d rhs) { return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z; }
+
+        // Projects a vector onto another vector.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3d Project(Vector3d vector, Vector3d onNormal)
+        {
+            double sqrMag = Dot(onNormal, onNormal);
+            if (sqrMag < kEpsilon)
+                return zero;
             else
-                this = Vector3d.zero;
-        }
-        public override string ToString() {
-            return "(" + this.x + ", " + this.y + ", " + this.z + ")";
-        }
-
-        public static double Dot(Vector3d lhs, Vector3d rhs) {
-            return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z;
+            {
+                double dot = Dot(vector, onNormal);
+                return new Vector3d(onNormal.x * dot / sqrMag,
+                    onNormal.y * dot / sqrMag,
+                    onNormal.z * dot / sqrMag);
+            }
         }
 
-        public static Vector3d Project(Vector3d vector, Vector3d onNormal) {
-            double num = Vector3d.Dot(onNormal, onNormal);
-            if (num < 1.40129846432482E-45d)
-                return Vector3d.zero;
-            else
-                return onNormal * Vector3d.Dot(vector, onNormal) / num;
-        }
-
-        public static Vector3d Exclude(Vector3d excludeThis, Vector3d fromThat) {
-            return fromThat - Vector3d.Project(fromThat, excludeThis);
-        }
-
-        public static double Angle(Vector3d from, Vector3d to) {
-            return Mathd.Acos(Mathd.Clamp(Vector3d.Dot(from.normalized, to.normalized), -1d, 1d)) * 57.29578d;
-        }
-
-        public static double Distance(Vector3d a, Vector3d b) {
-            Vector3d vector3d = new Vector3d(a.x - b.x, a.y - b.y, a.z - b.z);
-            return Math.Sqrt(vector3d.x * vector3d.x + vector3d.y * vector3d.y + vector3d.z * vector3d.z);
-        }
-
-        public static Vector3d ClampMagnitude(Vector3d vector, double maxLength) {
-            if (vector.sqrMagnitude > maxLength * maxLength)
-                return vector.normalized * maxLength;
-            else
+        // Projects a vector onto a plane defined by a normal orthogonal to the plane.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3d ProjectOnPlane(Vector3d vector, Vector3d planeNormal)
+        {
+            double sqrMag = Dot(planeNormal, planeNormal);
+            if (sqrMag < kEpsilon)
                 return vector;
+            else
+            {
+            	double dot = Dot(vector, planeNormal);
+                return new Vector3d(vector.x - planeNormal.x * dot / sqrMag,
+                    vector.y - planeNormal.y * dot / sqrMag,
+                    vector.z - planeNormal.z * dot / sqrMag);
+            }
         }
 
-        public static double Magnitude(Vector3d a) {
-            return Math.Sqrt(a.x * a.x + a.y * a.y + a.z * a.z);
+        // Returns the angle in degrees between /from/ and /to/. This is always the smallest
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double Angle(Vector3d from, Vector3d to)
+        {
+            // sqrt(a) * sqrt(b) = sqrt(a * b) -- valid for real numbers
+            double denominator = Math.Sqrt(from.sqrMagnitude * to.sqrMagnitude);
+            if (denominator < kEpsilonNormalSqrt)
+                return 0d;
+
+			double dot = Math.Clamp(Dot(from, to) / denominator, -1d, 1d);
+            return Math.Acos(dot) * Mathd.Rad2Deg;
         }
 
-        public static double SqrMagnitude(Vector3d a) {
-            return a.x * a.x + a.y * a.y + a.z * a.z;
+        // The smaller of the two possible angles between the two vectors is returned, therefore the result will never be greater than 180 degrees or smaller than -180 degrees.
+        // If you imagine the from and to vectors as lines on a piece of paper, both originating from the same point, then the /axis/ vector would point up out of the paper.
+        // The measured angle between the two vectors would be positive in a clockwise direction and negative in an anti-clockwise direction.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double SignedAngle(Vector3d from, Vector3d to, Vector3d axis)
+        {
+            double unsignedAngle = Angle(from, to);
+
+            double cross_x = from.y * to.z - from.z * to.y;
+            double cross_y = from.z * to.x - from.x * to.z;
+            double cross_z = from.x * to.y - from.y * to.x;
+            double sign = Mathd.Sign(axis.x * cross_x + axis.y * cross_y + axis.z * cross_z);
+            return unsignedAngle * sign;
         }
 
-        public static Vector3d Min(Vector3d lhs, Vector3d rhs) {
+        // Returns the distance between /a/ and /b/.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double Distance(Vector3d a, Vector3d b)
+        {
+            double diff_x = a.x - b.x;
+            double diff_y = a.y - b.y;
+            double diff_z = a.z - b.z;
+            return (double)Math.Sqrt(diff_x * diff_x + diff_y * diff_y + diff_z * diff_z);
+        }
+
+        // Returns a copy of /vector/ with its magnitude clamped to /maxLength/.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3d ClampMagnitude(Vector3d vector, double maxLength)
+        {
+            double sqrmag = vector.sqrMagnitude;
+            if (sqrmag > maxLength * maxLength)
+            {
+                double mag = (double)Math.Sqrt(sqrmag);
+                //these intermediate variables force the intermediate result to be
+                //of double precision. without this, the intermediate result can be of higher
+                //precision, which changes behavior.
+                double normalized_x = vector.x / mag;
+                double normalized_y = vector.y / mag;
+                double normalized_z = vector.z / mag;
+                return new Vector3d(normalized_x * maxLength,
+                    normalized_y * maxLength,
+                    normalized_z * maxLength);
+            }
+            return vector;
+        }
+
+        // *undoc* --- there's a property now
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double Magnitude(Vector3d vector) { return (double)Math.Sqrt(vector.x * vector.x + vector.y * vector.y + vector.z * vector.z); }
+
+        // Returns the length of this vector (RO).
+        public double magnitude
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get { return (double)Math.Sqrt(x * x + y * y + z * z); }
+        }
+
+        // *undoc* --- there's a property now
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double SqrMagnitude(Vector3d vector) { return vector.x * vector.x + vector.y * vector.y + vector.z * vector.z; }
+
+        // Returns the squared length of this vector (RO).
+        public double sqrMagnitude { [MethodImpl(MethodImplOptions.AggressiveInlining)] get { return x * x + y * y + z * z; } }
+
+        // Returns a vector that is made from the smallest components of two vectors.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3d Min(Vector3d lhs, Vector3d rhs)
+        {
             return new Vector3d(Mathd.Min(lhs.x, rhs.x), Mathd.Min(lhs.y, rhs.y), Mathd.Min(lhs.z, rhs.z));
         }
 
-        public static Vector3d Max(Vector3d lhs, Vector3d rhs) {
+        // Returns a vector that is made from the largest components of two vectors.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3d Max(Vector3d lhs, Vector3d rhs)
+        {
             return new Vector3d(Mathd.Max(lhs.x, rhs.x), Mathd.Max(lhs.y, rhs.y), Mathd.Max(lhs.z, rhs.z));
         }
 
-        [Obsolete("Use Vector3d.Angle instead. AngleBetween uses radians instead of degrees and was deprecated for this reason")]
-        public static double AngleBetween(Vector3d from, Vector3d to) {
-            return Mathd.Acos(Mathd.Clamp(Vector3d.Dot(from.normalized, to.normalized), -1d, 1d));
+        static readonly Vector3d zeroVector = new Vector3d(0F, 0F, 0F);
+        static readonly Vector3d oneVector = new Vector3d(1F, 1F, 1F);
+        static readonly Vector3d upVector = new Vector3d(0F, 1F, 0F);
+        static readonly Vector3d downVector = new Vector3d(0F, -1F, 0F);
+        static readonly Vector3d leftVector = new Vector3d(-1F, 0F, 0F);
+        static readonly Vector3d rightVector = new Vector3d(1F, 0F, 0F);
+        static readonly Vector3d forwardVector = new Vector3d(0F, 0F, 1F);
+        static readonly Vector3d backVector = new Vector3d(0F, 0F, -1F);
+        static readonly Vector3d positiveInfinityVector = new Vector3d(double.PositiveInfinity, double.PositiveInfinity, double.PositiveInfinity);
+        static readonly Vector3d negativeInfinityVector = new Vector3d(double.NegativeInfinity, double.NegativeInfinity, double.NegativeInfinity);
+
+        // Shorthand for writing @@Vector3d(0, 0, 0)@@
+        public static Vector3d zero { [MethodImpl(MethodImplOptions.AggressiveInlining)] get { return zeroVector; } }
+        // Shorthand for writing @@Vector3d(1, 1, 1)@@
+        public static Vector3d one { [MethodImpl(MethodImplOptions.AggressiveInlining)] get { return oneVector; } }
+        // Shorthand for writing @@Vector3d(0, 0, 1)@@
+        public static Vector3d forward { [MethodImpl(MethodImplOptions.AggressiveInlining)] get { return forwardVector; } }
+        public static Vector3d back { [MethodImpl(MethodImplOptions.AggressiveInlining)] get { return backVector; } }
+        // Shorthand for writing @@Vector3d(0, 1, 0)@@
+        public static Vector3d up { [MethodImpl(MethodImplOptions.AggressiveInlining)] get { return upVector; } }
+        public static Vector3d down { [MethodImpl(MethodImplOptions.AggressiveInlining)] get { return downVector; } }
+        public static Vector3d left { [MethodImpl(MethodImplOptions.AggressiveInlining)] get { return leftVector; } }
+        // Shorthand for writing @@Vector3d(1, 0, 0)@@
+        public static Vector3d right { [MethodImpl(MethodImplOptions.AggressiveInlining)] get { return rightVector; } }
+        // Shorthand for writing @@Vector3d(double.PositiveInfinity, double.PositiveInfinity, double.PositiveInfinity)@@
+        public static Vector3d positiveInfinity { [MethodImpl(MethodImplOptions.AggressiveInlining)] get { return positiveInfinityVector; } }
+        // Shorthand for writing @@Vector3d(double.NegativeInfinity, double.NegativeInfinity, double.NegativeInfinity)@@
+        public static Vector3d negativeInfinity { [MethodImpl(MethodImplOptions.AggressiveInlining)] get { return negativeInfinityVector; } }
+
+        // Adds two vectors.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3d operator+(Vector3d a, Vector3d b) { return new Vector3d(a.x + b.x, a.y + b.y, a.z + b.z); }
+        // Subtracts one vector from another.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3d operator-(Vector3d a, Vector3d b) { return new Vector3d(a.x - b.x, a.y - b.y, a.z - b.z); }
+        // Negates a vector.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3d operator-(Vector3d a) { return new Vector3d(-a.x, -a.y, -a.z); }
+        // Multiplies a vector by a number.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3d operator*(Vector3d a, double d) { return new Vector3d(a.x * d, a.y * d, a.z * d); }
+        // Multiplies a vector by a number.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3d operator*(double d, Vector3d a) { return new Vector3d(a.x * d, a.y * d, a.z * d); }
+        // Divides a vector by a number.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3d operator/(Vector3d a, double d) { return new Vector3d(a.x / d, a.y / d, a.z / d); }
+
+        // Returns true if the vectors are equal.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool operator==(Vector3d lhs, Vector3d rhs)
+        {
+            // Returns false in the presence of NaN values.
+            double diff_x = lhs.x - rhs.x;
+            double diff_y = lhs.y - rhs.y;
+            double diff_z = lhs.z - rhs.z;
+            double sqrmag = diff_x * diff_x + diff_y * diff_y + diff_z * diff_z;
+            return sqrmag < kEpsilon * kEpsilon;
         }
-    }
+
+        // Returns true if vectors are different.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool operator!=(Vector3d lhs, Vector3d rhs)
+        {
+            // Returns true in the presence of NaN values.
+            return !(lhs == rhs);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override string ToString()
+        {
+            return ToString(null, null);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public string ToString(string format)
+        {
+            return ToString(format, null);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public string ToString(string format, IFormatProvider formatProvider)
+        {
+            if (string.IsNullOrEmpty(format))
+                format = "F2";
+            if (formatProvider == null)
+                formatProvider = CultureInfo.InvariantCulture.NumberFormat;
+            return string.Format("({0}, {1}, {2})", x.ToString(format, formatProvider), y.ToString(format, formatProvider), z.ToString(format, formatProvider));
+        }
+
+
+
+
+
+
+
+
+
+		#endregion
+
+	}
 }
