@@ -1,6 +1,6 @@
 {
 	"name": "com.juwonpee.doubleprecisionvectors",
-	"version": "1.0",
+	"version": "1.0.0",
 	"displayName": "Double Precision Vectors",
 	"description": "An extension of the built in Vectors and quaternion to double precision",
 	"unity": "2019.4",
