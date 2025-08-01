@@ -5,7 +5,7 @@ using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
-namespace UnityEngine {
+namespace DoublePrecision {
     [Serializable] public struct Vector4d { 
         public const float kEpsilon = 1E-05f;
         public double w,x,y,z;
